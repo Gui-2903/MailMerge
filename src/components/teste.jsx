@@ -70,24 +70,15 @@ export default function PreviewPanel({
     }
   }
 
+  const generateAllZip = async () => {
+    if (!templateBuffer || !excelData.length) return
+    const zipOut = new JSZip()
 
-const generateAllZip = async () => {
-  if (!templateBuffer || !excelData.length) return
-  const zipOut = new JSZip()
-
-  for (let i = 0; i < excelData.length; i++) {
-    const data = buildData(excelData[i])
-    try {
-      // ✅ Cria uma cópia imutável do buffer a cada iteração
-      const bufferCopy = new Uint8Array(templateBuffer)
-      const zip = new PizZip(bufferCopy)
-
-      const doc = new Docxtemplater(zip, {
-        paragraphLoop: true,
-        linebreaks: true,
-      })
-
-      doc.setData(data) // ✅ volta a usar setData corretamente
+    for (let i = 0; i < excelData.length; i++) {
+      const data = buildData(excelData[i])
+      const zip = new PizZip(templateBuffer)
+      const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true })
+      doc.setData(data)
       doc.render()
 
       const content = doc.getZip().generate({ type: 'arraybuffer' })
@@ -97,44 +88,25 @@ const generateAllZip = async () => {
       const formData = new FormData()
       formData.append('file', file)
 
-      // 1️⃣ Envia DOCX e recebe JSON com URL
-      const response = await axios.post('http://localhost:4000/convert', formData)
-      const pdfUrl = response.data.url
+      try {
+        // 1️⃣ envia DOCX e recebe JSON
+        const response = await axios.post('http://localhost:4000/convert', formData)
+        const pdfUrl = response.data.url
 
-      // 2️⃣ Aguarda o PDF estar disponível (até 3 tentativas)
-      let pdfResponse = null
-      for (let attempt = 0; attempt < 3; attempt++) {
-        try {
-          pdfResponse = await axios.get(pdfUrl, { responseType: 'blob' })
-          if (pdfResponse.status === 200 && pdfResponse.data.size > 0) break
-        } catch {
-          console.warn(`PDF ainda não disponível (tentativa ${attempt + 1})...`)
-          await new Promise((res) => setTimeout(res, 1000))
-        }
+        // 2️⃣ baixa o PDF real
+        const pdfResponse = await axios.get(pdfUrl, { responseType: 'blob' })
+
+        const nome = data.nome?.replace(/\s+/g, '_') || `documento_${i + 1}`
+        const evento = eventName ? eventName.replace(/\s+/g, '_') : 'Evento'
+        zipOut.file(`${nome}_${evento}.pdf`, pdfResponse.data)
+      } catch (err) {
+        console.error(`Erro ao converter linha ${i + 1}:`, err)
       }
-
-      if (!pdfResponse) {
-        console.error(`❌ Falha ao baixar PDF da linha ${i + 1}`)
-        continue
-      }
-
-      // 3️⃣ Adiciona ao ZIP
-      const nome = data.nome?.replace(/\s+/g, '_') || `documento_${i + 1}`
-      const evento = eventName ? eventName.replace(/\s+/g, '_') : 'Evento'
-      zipOut.file(`${nome}_${evento}.pdf`, pdfResponse.data)
-    } catch (err) {
-      console.error(`❌ Erro ao converter linha ${i + 1}:`, err)
-      continue
     }
+
+    const contentZip = await zipOut.generateAsync({ type: 'blob' })
+    saveAs(contentZip, 'documentos_PDF.zip')
   }
-
-  // 4️⃣ Gera o ZIP final
-  const contentZip = await zipOut.generateAsync({ type: 'blob' })
-  saveAs(contentZip, 'documentos_PDF.zip')
-}
-
-
-
 
   return (
     <>
