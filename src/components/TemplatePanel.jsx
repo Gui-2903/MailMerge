@@ -64,7 +64,7 @@ export default function TemplatePanel({
           <button className="secondary" onClick={() => document.getElementById('wordInput').click()}>
             Substituir
           </button>
-          <button className="danger" onClick={removeTemplate}>
+          <button className="btn" onClick={removeTemplate}>
             Remover
           </button>
         </div>
@@ -82,7 +82,7 @@ export default function TemplatePanel({
               placeholder="Ex: Conferência 2025"
               value={eventName}
               onChange={(e) => setEventName(e.target.value)}
-              style={{ width: '100%', padding: '6px 8px', marginTop: 5 }}
+              style={{ width: '50%', padding: '6px 8px', marginTop: 5, borderRadius: '13px' }}
             />
           </label>
         </div>

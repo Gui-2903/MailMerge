@@ -33,9 +33,9 @@ body,
 
 /* App layout */
 .app {
-  max-width: 1200px;
+  max-width: 90%;
   margin: 28px auto;
-  padding: 28px;
+  padding: 0px;
 }
 
 header {
@@ -58,7 +58,7 @@ p.lead {
 
 .grid {
   display: grid;
-  grid-template-columns: 580px 1fr;
+  grid-template-columns: 1000px 1fr;
   gap: 20px;
 }
 
@@ -146,8 +146,10 @@ th {
   position: sticky;
   top: 0;
   background: transparent;
-  color: var(--muted);
+  color: #ffffff;
   font-weight: 600;
+  background: linear-gradient(360deg, #071a2a 0%, #0c528b 100%);
+  
 }
 
 /* Mapping controls */
